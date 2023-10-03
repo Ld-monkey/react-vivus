@@ -1,6 +1,6 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
-import Vivus from 'vivus';
+import { useEffect, useRef } from "react";
+import PropTypes from "prop-types";
+import Vivus from "vivus";
 
 const builtInAnimTimingFunction = {
   EASE: Vivus.EASE,
@@ -9,33 +9,41 @@ const builtInAnimTimingFunction = {
   EASE_OUT_BOUNCE: Vivus.EASE_OUT_BOUNCE,
 };
 
-class ReactVivus extends PureComponent {
-  componentDidMount() {
-    const { id, option, callback } = this.props;
-    let combinedOption = option;
-    if (option.animTimingFunction) {
-      combinedOption = {
-        ...combinedOption,
-        animTimingFunction: builtInAnimTimingFunction[option.animTimingFunction],
-      };
-    }
-    if (option.pathTimingFunction) {
-      combinedOption = {
-        ...combinedOption,
-        pathTimingFunction: builtInAnimTimingFunction[option.pathTimingFunction],
-      };
-    }
-    new Vivus(id, combinedOption, callback);
-  }
+function ReactVivus(props) {
+  const { id, option, callback, style, className } = props;
+  let combinedOptions = option;
+  const mounted = useRef(false);
 
-  render() {
-    const { id, style, className } = this.props;
-    return <div id={id} className={className} style={style} />;
-  }
+  useEffect(() => {
+    if (!mounted.current) {
+      if (option.animTimingFunction) {
+        combinedOptions = {
+          ...combinedOptions,
+          animTimingFunction:
+            builtInAnimTimingFunction[option.animTimingFunction],
+        };
+      }
+
+      if (option.pathTimingFunction) {
+        combinedOptions = {
+          ...combinedOptions,
+          pathTimingFunction:
+            builtInAnimTimingFunction[option.pathTimingFunction],
+        };
+      }
+      new Vivus(id, combinedOptions, callback);
+    }
+
+    return () => {
+      mounted.current = true;
+    };
+  }, []);
+
+  return <div id={id} className={className} style={style} />;
 }
 
 ReactVivus.defaultProps = {
-  className: '',
+  className: "",
   style: {},
   callback: undefined,
 };
